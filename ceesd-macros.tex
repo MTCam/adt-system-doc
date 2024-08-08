@@ -1,0 +1,338 @@
+
+%%%%%%% CODES
+\newcommand{\PlasComCM}{\textit{PlasComCM}}
+\newcommand{\PlasComCMtwo}{\textit{PlasCom2}}
+\newcommand{\goldenCopy}{\textit{golden copy}}
+\newcommand{\GoldenCopy}{\textit{Golden Copy}}
+\newcommand{\cl}[1]{\textit{codelet-#1}}
+\newcommand{\Cl}[1]{\textit{Codelet-#1}}
+\newcommand{\plusplus}[1]{#1{}\texttt{++}}
+\newcommand{\ceesdcode}{\textit{MIRGE-Com}}
+\newcommand{\ceesdMIRGE}{\textit{MIRGE}}
+\newcommand{\ceesdbasiccode}{\textit{M-Com}}
+\newcommand{\MIRGECom}{\textit{MIRGE-Com}}
+\newcommand{\mirgecom}{\ceesdMIRGE}
+\newcommand{\MIRGEHeat}{\textit{MIRGE-Heat}}
+\newcommand{\ABaTe}{\textit{A\!Ba\!Te}}
+
+\definecolor{tab-blue}{HTML}{1f77b4}
+\definecolor{tab-orange}{HTML}{ff7f0e}
+\definecolor{tab-green}{HTML}{2ca02c}
+\definecolor{tab-red}{HTML}{d62728}
+\definecolor{tab-purple}{HTML}{9467bd}
+\definecolor{tab-brown}{HTML}{8c564b}
+\definecolor{tab-pink}{HTML}{e377c2}
+\definecolor{tab-gray}{HTML}{7f7f7f}
+\definecolor{tab-olive}{HTML}{bcbd22}
+\definecolor{tab-cyan}{HTML}{17becf}
+
+\newcommand{\preqex}[1]{{\color{tab-purple} \textit{#1}}}
+\newcommand{\preqcoop}[1]{{\color{tab-green} \textit{#1}}}
+\newcommand{\preqceesd}[1]{{\color{tab-blue} \textit{#1}}}
+
+\newcommand{\pop}[1]{{\color{tab-brown} \textit{#1}}}
+\newcommand{\popceesd}[1]{{\color{tab-red} \textit{#1}}}
+
+\newcommand{\pother}[1]{{\color{tab-orange} \textit{#1}}}
+
+\newcommand{\clink}{{\tiny({\color{blue} link})}}
+
+\newcommand{\Q}[1]{{\medskip\small\noindent\color{red}#1\par}}
+
+%%%%%%% ANIMATIONS
+\newcommand{\insertmovie}[3]{\ifmovies{
+\movie[autostart,loop]
+{\includegraphics[width=#1\textwidth]{Movies/#2}}
+{Movies/#3}
+}
+\else{
+\includegraphics[width=#1\textwidth]{Movies/#2}
+}
+\fi
+}
+
+
+%%%%%%%%% COLORS
+\definecolor{RED}{RGB}{255,0,0}  %%%
+\definecolor{myBlue}{RGB}{19,41,75}  %%% BLUE
+\definecolor{myBlueLink}{RGB}{70,70,200}  %%% ILLINOIS BLUE
+\definecolor{myOrange}{RGB}{232,74,39}   %%% ILLINOIS ORANGE
+\definecolor{IllinoisOrange}{RGB}{232,74,39}  %%% ILLINOIS ORANGE
+\definecolor{IllinoisBlue}{RGB}{19,41,75}   %%% ILLINOIS BLUE
+\definecolor{mainTextColor}{RGB}{19,41,75}  %%% ILLINOIS BLUE
+\definecolor{myLightGray}{rgb}{0.95,0.95,0.95}
+
+\definecolor{ForestGreen}{rgb}{0.0, 0.2, 0.13}
+\definecolor{darkpastelgreen}{rgb}{0.01, 0.75, 0.24}
+\definecolor{antiquewhite}{rgb}{0.98, 0.92, 0.84}
+
+\newcommand{\makeRed}[1]{{\color{red} #1}}
+\newcommand{\makeBlue}[1]{{\color{blue} #1}}
+\newcommand{\makeOrange}[1]{{\color{orange} #1}}
+\newcommand{\makeGreen}[1]{{\color{ForestGreen} #1}}
+
+
+%%%%%%%%% COMMENTS/INSTRUCTIONS/NOTES
+\newcommand{\instr}[1]{{\newpage\thispagestyle{empty}\sf\color{red}INSTRUCTIONS:\color{blue}\\\bigskip\\#1\clearpage\newpage \setcounter{page}{1}}}
+\newenvironment{notes}{\color{red}\footnotesize \begin{center}\begin{minipage}{0.8\textwidth}}{\end{minipage}\end{center}}
+\newcommand{\CHK}{{\color{Red}CHK???}}
+\newcommand{\CHKCS}{{\color{Green}CHK CS ???}}
+\newcommand{\CHKWDG}{{\color{Green}CHK BILL ???}}
+\newcommand{\CHKLNO}{{\color{Orange}CHK LUKE ???}}
+\newcommand{\CHKAK}{{\color{Blue}CHK ANDREAS ???}}
+
+%%%% DISABLE
+\renewcommand{\CHK}{}
+\renewcommand{\CHKCS}{}
+\renewcommand{\CHKWDG}{}
+\renewcommand{\CHKLNO}{}
+\renewcommand{\CHKAK}{}
+
+
+%%%%%%%%% FORMATTING
+\captionsetup{labelfont={color=myOrange,bf},textfont={color=myBlue}}
+\newcommand{\HRule}[2]{{\color{myOrange}\rule{#1}{#2}}}
+\newcommand{\tPI}[1]{{\color{myOrange}#1}}
+\newcommand{\ttPI}[1]{\texttt{\color{myOrange}#1}}
+\newcommand{\sPI}[1]{\textsc{\color{myOrange}#1}}
+\newcommand{\cPI}[1]{\textbf{\color{myOrange}#1}}
+\newcommand{\rPI}[1]{\textrm{\color{myOrange}#1}}
+\newcommand{\iPI}[1]{\textit{\color{myOrange}#1}}
+\newcommand{\code}[1]{\textit{#1}}
+
+\newcommand{\lead}[1]{\textit{\color{myOrange}(#1)}}
+\newcommand{\tabtit}[1]{\textsc{\color{myOrange}#1}}
+\newcommand{\entry}[1]{\mbox{\sffamily\bfseries{#1:}}\hfil}%
+\newcommand{\bitem}{\item[{\color{myOrange}$\bullet$}]}
+\newcommand{\oitem}{\item[{\color{myOrange}$\circ$}]}
+\newcommand{\cditem}{\item[{\color{myOrange}$\cdot$}]}
+\newcommand{\bmath}{\boldsymbol}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\Dpartial}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\itemcolor}[1]{% Update list item colour
+\renewcommand{\makelabel}[1]{\color{#1}\hfil ##1}}
+\newcommand{\cM}{\mathcal{M}}
+\newcommand{\gdotfill}{{\color{gray}\dotfill}}
+\newcommand{\bvec}[1]{\ensuremath{\boldsymbol{#1}}}
+\newcommand{\matrd}[1]{\ensuremath{\mathsf{#1}}}
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+%\newcommand{\parab}[2]{\vspace{#1 pt}\noindent \paragraph{\bf #2 \\}}
+
+\newcommand{\mr}[1]{\multirow{2}{*}{#1}}
+\newcommand{\mriii}[1]{\multirow{3}{*}{#1}}
+
+\newcommand{\bbC}{\mathbb{C}}
+\newcommand{\vbbm}{{\vec{m}}}
+\newcommand{\bbM}{\mathbb{M}}
+\newcommand{\bbH}{\mathbb{H}}
+\newcommand{\bbG}{\mathbb{G}}
+\newcommand{\bbV}{\mathbb{V}}
+
+\newcommand{\vD}{{\vec D}}
+\newcommand{\vhD}{{\hat{D}}}
+\newcommand{\vg}{{\vec g}}
+\newcommand{\vphi}{{\vec\phi}}
+\newcommand{\vOmega}{{\vec\Omega}}
+
+\newcommand{\vF}{{\vec{F}}}
+\newcommand{\vf}{{\vec{f}}}
+\newcommand{\vb}{{\vec{b}}}
+\newcommand{\vq}{{\vec{q}}}
+\newcommand{\vqs}{{\vec{q}^{\,\color{red}*}}}
+
+\newcommand{\cJ}{\mathcal{J}}
+\newcommand{\cG}{\mathcal{G}}
+\newcommand{\cI}{\mathcal{I}}
+\newcommand{\cP}{\mathcal{P}}
+\newcommand{\cN}{\mathcal{N}}
+\newcommand{\cC}{\mathcal{C}}
+\newcommand{\cO}{\mathcal{O}}
+
+\newcommand{\rstar}{{\color{red}*}}
+\newcommand{\rchk}{{\color{red} \checkmark}}
+\newcommand{\gchk}{{\color{green} \checkmark}}
+\newcommand{\rbul}{{\color{red} $\bullet$}}
+\newcommand{\pbul}{{\color{myOrange} $\bullet$}}
+\newcommand{\ro}{{\color{red} $\circ$}}
+
+\newcommand{\rhoi}[1][i]{\rho_{#1}}
+\newcommand{\dt}[1][t]{\partial_{#1}}
+\newcommand{\dx}[1][{\textrm{\bf x}}]{\boldsymbol \partial_{#1}}
+\newcommand{\Vi}[1][i]{\mathcal{V}_{#1}}
+\newcommand{\Mi}[1][\textswab{i}]{\mathcal{M}_{#1}}
+\newcommand{\omegai}[1][i]{\dot{\omega}_{#1}}
+\newcommand{\grav}{{\bf g}}
+\newcommand{\Etot}{\mathcal{E}}
+
+\newcommand{\mBG}{m_{\text{\tiny BG}}}
+\newcommand{\nBG}{n_{\text{\tiny BG}}}
+\newcommand{\nIp}{n_{\text{\tiny $I^+$}}}
+\newcommand{\nIm}{n_{\text{\tiny $I^-$}}}
+
+
+\newcommand{\bE}{{\mathbf{E}}}
+\newcommand{\bI}{{\mathbf{I}}}
+\newcommand{\bq}{{\mathbf{q}}}
+\newcommand{\btau}{{\boldsymbol{\tau}}}
+
+\newcommand{\bv}{{\bar{v}}}
+\newcommand{\bepsilon}{{\bar{\epsilon}}}
+
+\newcommand{\ST}{{S_{\text{\tiny T}}}}
+
+\newcommand{\vu}{\vec{u}}
+\newcommand{\vQ}{\vec{Q}}
+\newcommand{\veta}{\vec{\eta}}
+
+\newcommand{\TODO}[1]{{\color{pink} \tiny TODO: #1}}
+\newcommand{\mtc}[1]{{\color{blue} \small MTC: #1}}
+\newcommand{\tulio}[1]{{\color{orange} \small Tulio: #1}}
+\newcommand{\mja}[1]{{\color{red} \small MJA: #1}}
+\newcommand{\mynote}[1]{{\color{green} \tiny #1}}
+\newcommand{\prj}[2]{{\color{gray} #1 [#2]}}
+
+\newcommand{\myoul}[1]{\color{myOrange}\underline{\smash{\color{pdcolor1} #1}}\color{pdcolor1}}
+\newcommand{\ccdot}{\color{myOrange}$\circ$\color{pdcolor1}\;}
+\newcommand{\cc}[1]{\color{myOrange}#1\color{pdcolor1}{}}
+
+
+
+% Grad, div, curl, etc.
+\newcommand{\vdot}{\mathop{\mbox{\boldmath{$\cdot$}}}}
+\newcommand{\vddot}{\mathop{\mbox{\textbf{:}}}}
+\newcommand{\bnabla}{\mbox{\boldmath{$\nabla$}}}
+\newcommand{\Lapl}{\nabla^2}
+\newcommand{\hLapl}{\nabla^2_{\!\mathrm{h}}}
+\newcommand{\pLapl}{\nabla^2_{\!\!\!\perp}}
+
+
+\arrayrulecolor{myOrange}
+
+%%%%%%%%% PAGE DIMENSIONS
+\setlength{\oddsidemargin}{0.0in}
+\setlength{\textwidth}{6.5in}
+\setlength{\topmargin}{-0.4in}
+\setlength{\footskip}{0.2in}
+\setlength{\textheight}{9.4in}
+\setlength{\headheight}{0.2in}
+\setlength{\headsep}{0.0in}
+
+%%%%%%%%%%% FLOAT MANAGEMENT
+ \renewcommand{\topfraction}{0.9}
+    \renewcommand{\bottomfraction}{0.8}
+    \setcounter{topnumber}{2}
+    \setcounter{bottomnumber}{2}
+    \setcounter{totalnumber}{4}     % 2 may work better
+    \setcounter{dbltopnumber}{2}    % for 2-column pages
+    \renewcommand{\dbltopfraction}{0.9}	% fit big float above 2-col. text
+    \renewcommand{\textfraction}{0.07}	% allow minimal text w. figs
+    \renewcommand{\floatpagefraction}{0.7}	% require fuller float pages
+    \renewcommand{\dblfloatpagefraction}{0.7}	% require fuller float pages
+
+%%%%%%%%%% PARAGRAPHING
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1.ex}
+\renewcommand{\baselinestretch}{0.95}
+
+
+%%%%%%%%% SECTIONING STUFF
+\makeatletter
+\renewcommand{\section}{\@startsection
+{section}%
+{0}%
+{0mm}%
+{0.2\baselineskip}%
+{0.1\baselineskip}%
+{\normalfont\Large\bfseries\color{myOrange}}}%
+\makeatother
+
+\makeatletter
+\renewcommand{\subsection}{\@startsection
+{subsection}%
+{1}%
+{0mm}%
+{0.3\baselineskip}%
+{0.1\baselineskip}%
+{\normalfont\large\bfseries\color{myOrange}}}%
+\makeatother
+
+\makeatletter
+\renewcommand{\subsubsection}{\@startsection
+{subsubsection}%
+{1}%
+{0mm}%
+{0.1\baselineskip}%
+{0.1\baselineskip}%
+{\normalfont\normalsize\itshape\centering\color{myOrange}}}%
+\makeatother
+
+
+\renewcommand{\thesection}{\arabic{section}}
+\renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
+
+\newcommand{\codebox}[1]{\vspace*{-0.15in}
+\begin{center}
+\fcolorbox{myOrange}{myLightGray}{
+\begin{minipage}{0.96\textwidth}
+\noindent\footnotesize
+{#1}\par
+\end{minipage}}
+\end{center}
+\vspace*{-0.15in}
+}
+
+
+\newcommand{\myhref}[2]{\href{#1}{{#2}}}
+
+\newenvironment{noinditemize}
+{\begin{itemize}[leftmargin=*,label=\color{myOrange}$\bullet$,itemsep=0in]\raggedright}
+{\end{itemize}}
+
+\newenvironment{tnoinditemize}
+{\begin{tiny}\begin{noinditemize}}
+{\end{noinditemize}\end{tiny}}
+
+
+\usepackage{titleps,kantlipsum}
+\newpagestyle{mypage}{%
+  \sethead{}{}{}
+  % \sethead{\raisebox{0.5in}{\tiny \color{myOrange}
+  %     {\sectiontitle}}}{}
+  % {\raisebox{0.5in}{\tiny \color{myOrange} \subsectiontitle}}
+  \setfoot{}{\footnotesize\color{myOrange} \thepage}{}
+}
+\settitlemarks{section,subsection,subsubsection}
+\pagestyle{mypage}
+
+
+
+%%%%%%% INTERNSHIP STATUS
+\newcommand{\MUST}{{\footnotesize\color{red} \textbf{MUST}}}
+\newcommand{\WISH}{{\footnotesize\color{orange} \textbf{WISH}}}
+\newcommand{\DEFER}{{\footnotesize\color{yellow} \textbf{DEFER}}}
+\newcommand{\RETURN}{{\footnotesize\color{blue} \textbf{RETURN}}}
+\newcommand{\DONE}{{\footnotesize\color{ForestGreen} \textbf{COMPLETED}}}
+\newcommand{\PLAN}{{\footnotesize\color{green} \textbf{PLANNED}}}
+\newcommand{\CURRENT}{{\footnotesize\color{cyan} \textbf{NOW}}}
+\newcommand{\MAYBE}{{\footnotesize\color{lightgray} \textbf{MAYBE}}}
+
+\newcommand{\SNL}{{\footnotesize $\;\rightarrow$ SNL}}
+\newcommand{\LLNL}{{\footnotesize $\;\rightarrow$ LLNL}}
+\newcommand{\LANL}{{\footnotesize $\;\rightarrow$ LANL}}
+
+
+\newcommand{\aMUST}{\tiny\raisebox{1.5pt}{\color{red} (\textbf{M})}}
+\newcommand{\aWISH}{\raisebox{1.5pt}{\tiny\color{orange} (\textbf{W})}}
+\newcommand{\aDEFER}{\raisebox{1.5pt}{\tiny\color{yellow} (\textbf{D})}}
+\newcommand{\aRETURN}{\raisebox{1.5pt}{\tiny\color{blue} (\textbf{R})}}
+\newcommand{\aDONE}{\raisebox{1.5pt}{\tiny\color{ForestGreen} (\textbf{C})}}
+\newcommand{\aPLAN}{\raisebox{1.5pt}{\tiny\color{green} (\textbf{P})}}
+\newcommand{\aCURRENT}{\raisebox{1.5pt}{\tiny\color{cyan} (\textbf{N})}}
+\newcommand{\aMAYBE}{\raisebox{1.5pt}{\tiny\color{lightgray} (\textbf{M})}}
+
+\newcommand{\fut}{$^*$}
+\newcommand{\pas}{$^\dag$}
+\newcommand{\ant}{$^\ddag$}
+\newcommand{\mat}{$^\S$}
+\newcommand{\fel}{$^\circ$}

@@ -1,0 +1,149 @@
+
+
+\documentclass[11pt]{article}
+
+\usepackage{amsmath,amsfonts,amssymb,enumitem}
+\usepackage[]{graphicx}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{colortbl}
+\usepackage{wrapfig}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage[version=3]{mhchem}
+\usepackage[disable,colorinlistoftodos, color=blue!20!white, bordercolor=gray,
+textsize=tiny,textwidth=1.0in]{todonotes}
+\usepackage[final]{pdfpages}
+
+\usepackage[font=footnotesize,format=plain,labelfont=bf]{caption}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{pifont}
+\usepackage{comment}
+%\usepackage{overcite}
+
+\usepackage{hyperref}
+\hypersetup{hidelinks}
+\usepackage{subfigure}
+\usepackage{pdflscape}
+\usepackage{bm}
+\usepackage{xfrac}
+
+\usepackage[usestackEOL]{stackengine}
+
+\input{ceesd-macros}
+
+\renewcommand{\vec}[1]{\bm{#1}}
+
+\usepackage{listings}
+
+\definecolor{mintedlikecommentcolor}{rgb}{0.16,0.51,0.51}
+\definecolor{mintedlikekeywordcolor}{rgb}{0,0.6,0}
+\definecolor{mintedlikestringcolor}{rgb}{0.79,0,0}
+\newcommand{\mintedlikebasicstyle}[1]{\ttfamily#1\linespread{4}}
+\lstdefinestyle{mintedlike}{
+    language=python,
+    basicstyle=\mintedlikebasicstyle{\normalsize},
+    commentstyle=\itshape\color{mintedlikecommentcolor},
+    keywordstyle=\color{mintedlikekeywordcolor},
+    stringstyle=\color{mintedlikestringcolor},
+    columns=fullflexible,
+    breakatwhitespace=false,
+    breaklines=false,
+    keepspaces=true,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=4,
+    escapeinside=@@
+}
+
+
+\title{Using LLM-based Tools in Computational Science and Engineering}
+\author{Suchit Batpala \\ \small{Computer Science Undergraduate} \and Mike Campbell \\ \small{CEESD Principal Research Engineer}}
+
+\date{\today}
+
+\begin{document}
+\color{mainTextColor}
+\maketitle
+
+\section{Goals of the project}
+
+In this project, we will investigate the use of an LLM-based tool for helping develop, execute, and understand a computational science and engineering application.
+
+The goals of this project are:
+
+\begin{itemize}
+\item Develop a CSE Application
+  \begin{itemize}
+  \item Create a representative simulation application
+  \item Execute the application on modern HPC platforms
+  \item Evaluate the performance of the application
+  \end{itemize}
+%  \item Evaluate Absolute Performance: Assess the absolute performance of the developed advection-diffusion solver using a simple model problem and compare it against other similar codes.
+\item Investigate LLM Effectiveness as a Tool for CSE
+  \begin{itemize}
+  \item Develop an interface to an LLM for use in the project
+  \item Develop a set of metrics by which to measure LLM effectiveness
+  \item Evaluate the effectiveness of the LLM-based assistant in various stages of the project, including code development and debugging, execution on HPC platforms, and performance evaluation.
+  \end{itemize}
+%\item Enhance Computational Science: Utilize the LLM assistant to improve understanding and analysis of the computational fluid dynamics (CFD) flow fields through both code analysis and image analysis.
+\end{itemize}
+
+\section{Background}
+
+The Center for Exascale-Enabled Scramjet Design (CEESD) is a Dept. of Energy funded project that endeavors to develop a simulation tool for use in understanding and designing the internal flow, combustion, and materials in scramjets. They leverage a novel computational infrastructure that they call MIRGE: (\textbf{M}ath \textbf{I}ntermediate \textbf{R}epresentation \textbf{G}eneration \textbf{E}xecution)\cite{ref:AK2012}\cite{ref:AK2009}. This infrastructure facilitates a separation of concerns wherein computational scientists can develop numerical models in Python, numpy-like syntax, and computer scientists develop code ingestion and transformations that create optimized kernels targeting high-performance compute resources.
+
+Evaluating and understanding the performance of HPC simulation applications is an important endeavor in CSE \cite{ref:Kolev2021}. Performance evaluations give investigators metrics on the current model implementations like floating point operations, memory accesses, cache hits, parallel scalability, and more.  Investigators with simulation goals use these metrics to estimate the compuational resources that will be required to coduct the simluations. Understanding performance requires modeling both the implementations, and the platforms, in order to know what to expect for application performance. Gaps between actual application performance and that which is expected are opportunities for improvement of the code and performance models. CEESD's MIRGE infrastructure presents an additional challenge to understanding application performance owing to complex relationship between the code that the computational scientist writes and the generated executables.
+
+LLM-based assistants are emerging as a useful tool for assisting with code writing, debugging, and as teaching tools. Many major software and information technology companies are developing or offering LLM-driven assistance and enhancements in their software and tol stacks. LLM-based tools are of growing interest to computational scientists and engineers for use in their endeavors.   
+\section{Project Plan}
+We will take the following approach to accomplish the outlined goals:
+
+\begin{itemize}
+\item Develop an LLM interface: Using UIUC.chat system developed by Kastan Day@NCSA, we will:
+  \begin{itemize}
+  \item Extend UIUC.chat so that it can use a freely available LLM API
+  \item Develop and command-line help and query tool for the CEESD infrastructure and \ceesdcode{} application
+  \item Develop an image ingest and vision analysis suite for \ceesdcode{} using existing UIUC.chat capabilities
+  \end{itemize}
+\item Develop a set of tests and metrics for use in evaluating/measuring the effectiveness of the LLM tool in helping with:
+  \begin{itemize}
+  \item Developing MIRGE code (including debuggging)
+  \item Using HPC resources
+  \item Debugging CFD applications using flow-field/image analysis
+  \end{itemize}
+\item Develop a simple simulation application CEESD MIRGE infrastructure (LLM-assisted)
+  \begin{itemize}
+  \item Impelement an advection diffusion operator and driver
+  \item Verify the numerical model impelementation
+  \item Execute the application on modern HPC resources (Clustered GPUs)
+  \end{itemize}
+\item Investigate the application performance (LLM-assisted)
+  \begin{itemize}
+  \item Create a model problem/case to be used in our performance study 
+  \item Evaluate the performance of the application: time-to-solution and scalability
+  \item Craft a performance model for the simulation application
+  \item Compare application performance to the model, and to other similar codes (like \textit{DealII}, \textit{paraNumal})
+  \end{itemize}
+\end{itemize}
+
+\section{Potential Benefits}
+
+This work will produce an important, concrete result for CEESD researchers in their endeavor to evaluate and understand the performance of their infrastructure and simulation applications.  This understanding, identifications of bottlenecks, and deviations from expected performance can potentially lead to future improvements in their infrastructure and applications.
+
+In addition to a real-world, actionable performance intellegence, this work will provide an evaluation on the efficacy of using an LLLM-based tool to help with development, running, and understanding a complex CSE application.  We will provide CEESD with a roadmap of possbilities for using such a tool to help with their development, training, and onboarding new developers.
+
+There is also a valuable educational value to this project. We will learn important skills that will transfer to our future work in CSE, working on a team, software development, parallel performance analysis, and HPC resource usage.
+
+\section{References}
+\renewcommand{\refname}{}
+\vspace{-25pt}
+%\renewcommand{\bibfont}{\small}
+%setlength{\bibsep}{0pt plus 0.5ex}
+\bibliographystyle{plain} %apa
+\bibliography{refs}
+
+
+\end{document}
