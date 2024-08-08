@@ -452,47 +452,56 @@ Write out the matrix/operator form of system equations in more detail, for use i
   \dot{Q} &= \mathbb{M}^{-1}\left(\mathbb{S}_{\hat{x}} F_x + \mathbb{S}_{\hat{y}} F_y + \mathbb{S}_{\hat{z}} F_z + \sum_\text{faces} \mathbb{M}_f h\right) \\
   \mathbf{\Sigma} &= \mathbb{M}^{-1}\left(\sum_{\text{faces}}{\mathbb{M}_f Q_h\hat{\mathbf{n}}} - <\mathbb{S}_{\hat{x}} Q, \mathbb{S}_{\hat{y}}Q, \mathbb{S}_{\hat{z}}Q>\right)
 \end{align}
-\subsection{DOF Counting}
-Explain how to calculate the sizes of the DG operators.  How many DOFs per element of a given order? $\frac{\text{ndof}}{\text{element}}=\frac{(p+\text{dim})!}{(p!)(\text{dim}!)}$.
 
-For example, a $p=1$ tetrahedral element will have $\frac{4!}{3!}$ DOFs, and its faces will each have $\frac{3!}{2!}$ DOFs.
+\subsection{Elements and DOF Counting}
+
+Explain how to calculate the sizes of the DG operators.  Simplex elements (lines, triangles and tetrahedra, in 1, 2, and 3 dimensions, resp.) have $d+1$ vertices, and faces per element, where $d$ is the number of spatial dimensions.  For example, a 3d simplex (i.e. a tetrahedron) has 4 veritices and 4 faces.  Each face of a simplex is itself just a simplex of dimension $d-1$.
+
+The number of DOFs (or nodes, or modes) on the simplicial element is order-dependent. To represent a scalar field on a simplex element, the number of DOFs per element of a given order $p$ is $d_v=\frac{\text{\# volume dofs}}{\text{element}}=\frac{(p+d)!}{(p!)(d!)}$.
+
+For example, a $p=1$ tetrahedral element will have 4 nodes, and a scalar field represented on a tetrahedral elements will require $d_v = \frac{4!}{3!} = 4$ nodal DOFs. The tet also has 4 trianglar faces, and each face has $d_f = \frac{3!}{2!} = 3$ DOFs, when we represent a scalar field on the face. Order $p=2$ tets have 10 volume nodes, and each triangular face has 6 nodes. 
+
+We denote the number of DOFs per element, and per face as $d_v$, and $d_f$, respectively. Likewise, in the following the number of elements will be denoted as $N_v$ and the total number of faces by $N_f$, while the number of faces per element is denoted by $n_f$.
+
+\subsection{\ceesdcode{} DG Operators}
+
+The element-local operators pre-calculated and provided my \ceesdcode{}, and their sizes are as follows:  
+\begin{itemize}
+\item $\mathbb{M}^{-1}$: Inverse mass operator, $d_v \times d_v$
+\item $\mathbb{M}_f$: Face mass operator, $d_v \times d_f$
+\item $\mathbb{P}$: Projection operator $d_f \times d_v$
+\item $\mathbb{S}_j$: Stiffness operator $d_v \times d_v$
+\end{itemize}
 
 \subsection{Algorithm}
-Write a pseudo-code explanation of every step, especially those steps that are expected to impact performance.  The operators, assumed to be pre-caculated and provided my mirgecom are
-\begin{itemize}
-\item $\mathbb{M}$: Mass operator, $\text{ndof}_\text{el} \times \text{ndof}_\text{el}$
-\item $\mathbb{M}^{-1}$: Inverse mass operator
-\item $\mathbb{P}$: Projection operator $\text{ndof}_\text{face} \times \text{ndof}_\text{el}$
-\item $\mathbb{S}_j$: Stiffness operator $\text{ndof}_\text{el} \times \text{ndof}_\text{el}$
-\end{itemize}
-
-A rough outline of the RHS algorithm for each element goes like this:
-\begin{itemize}
-\item project $Q$ to element faces (and communicate)  Example count: For each face we need a MatVec $\mathbb{P}(Q)$, which means we'll have nfaces*(ndof\_element X ndof\_element) (or something like that)
-\item for n = 1 to $\frac{nfaces}{element}$
-  \begin{itemize}
-  \item compute gradient numerical flux for face $\mathbf{H}_f = \{\{Q\}\}\hat{\mathbf{n}}$ Example count, looking back at grad flux computation I count (4FLOPS / 6 LoadStores).
-  \item $\mathbb{M}_f$ on each component (ndim * MatVec)
-  \item accumulate to $\mathbf{H}$ (nfaces * FLOPS)
-  \end{itemize}
-\item $\vec{dQ} = \mathbb{S}_i Q$ (per dimension)
-\item $\mathbb{M}^{-1}(\vec{dQ} + \mathbf{H})$ for $\nabla{Q}$
-\item project $\nabla{Q}$ to element faces (and communicate)
-\item compute advective flux $\mathbf{F}_\text{adv} = Q\vec{v}$
-\item compute diffusive flux $\mathbf{F}_\text{diff} = -D\nabla{Q}$
- \item $\mathbf{F} = \left(\mathbf{F}_\text{adv} + mathbf{F}_\text{diff}\right)$ 
-\item for n = 1 to $\frac{nfaces}{element}$
-  \begin{itemize}
-  \item compute advective flux $\mathbf{F}_\text{adv} = Q\vec{v}$
-  \item compute diffusive flux $\mathbf{F}_\text{diff} = -D\nabla{Q}$
-  \item $\mathbf{F} = \mathbf{F}_\text{diff} - \mathbf{F}_\text{adv}$
-  \item compute numerical flux $h_f=\{\{\mathbf{F}\}\} \cdot \hat{\mathbf{n}}$
-  \item compute facial contribution $\mathbb{M}_f h$
-  \item accumulate to $h$
-  \end{itemize}
-\item $\nabla \cdot \mathbf{F} = \mathbb{S}_{\hat{x}}\mathbf{F}_x + \mathbb{S}_{\hat{y}}\mathbf{F}_y + \mathbb{S}_{\hat{z}}\mathbf{F_z}$
-\item $\mathbb{M}^{-1}(h + \nabla\cdot\mathbf{F})$ for $\dot{Q}$
-\end{itemize}
+Write a pseudo-code explanation of every step, especially those steps that are expected to impact performance. 
+%A rough outline of the RHS algorithm for each element goes like this:
+%\begin{itemize}
+%\item project $Q$ to element faces (and communicate)  Example count: For each face we need a Mat%Vec $\mathbb{P}(Q)$, which means we'll have nfaces*(ndof\_element X ndof\_element) (or something% like that)
+%\item for n = 1 to $\frac{nfaces}{element}$
+%  \begin{itemize}
+%  \item compute gradient numerical flux for face $\mathbf{H}_f = \{\{Q\}\}\hat{\mathbf{n}}$ Exam%ple count, looking back at grad flux computation I count (4FLOPS / 6 LoadStores).
+%  \item $\mathbb{M}_f$ on each component (ndim * MatVec)
+%  \item accumulate to $\mathbf{H}$ (nfaces * FLOPS)
+%  \end{itemize}
+%\item $\vec{dQ} = \mathbb{S}_i Q$ (per dimension)
+%\item $\mathbb{M}^{-1}(\vec{dQ} + \mathbf{H})$ for $\nabla{Q}$
+%\item project $\nabla{Q}$ to element faces (and communicate)
+%\item compute advective flux $\mathbf{F}_\text{adv} = Q\vec{v}$
+%\item compute diffusive flux $\mathbf{F}_\text{diff} = -D\nabla{Q}$
+% \item $\mathbf{F} = \left(\mathbf{F}_\text{adv} + mathbf{F}_\text{diff}\right)$ 
+%\item for n = 1 to $\frac{nfaces}{element}$
+%  \begin{itemize}
+%  \item compute advective flux $\mathbf{F}_\text{adv} = Q\vec{v}$
+%  \item compute diffusive flux $\mathbf{F}_\text{diff} = -D\nabla{Q}$
+%  \item $\mathbf{F} = \mathbf{F}_\text{diff} - \mathbf{F}_\text{adv}$
+%  \item compute numerical flux $h_f=\{\{\mathbf{F}\}\} \cdot \hat{\mathbf{n}}$
+%  \item compute facial contribution $\mathbb{M}_f h$
+%  \item accumulate to $h$
+%  \end{itemize}
+%\item $\nabla \cdot \mathbf{F} = \mathbb{S}_{\hat{x}}\mathbf{F}_x + \mathbb{S}_{\hat{y}}\mathbf{%F}_y + \mathbb{S}_{\hat{z}}\mathbf{F_z}$
+%\item $\mathbb{M}^{-1}(h + \nabla\cdot\mathbf{F})$ for $\dot{Q}$
+%\end{itemize}
 
 \begin{algorithm}
 \caption{Compute RHS for Advection-Diffusion Equation using Discontinuous Galerkin Solver}
@@ -540,7 +549,9 @@ A rough outline of the RHS algorithm for each element goes like this:
 
 \subsection{Expected performance}
 \subsubsection{General operators}
-What FLOPs, memory requirements do we expect for MatMat, MatVec, scalar operations appearing in the DG code.
+What FLOPs, memory requirements do we expect for the operations appearing in the DG code?
+
+A matrix-matrix (MatMat) multiplication of matrices with sizes described by:  $(m \times n) \times (n \times k)$ should, at least naively, involve $m~k~(2n - 1)$ FLOPS, with $mn+nk+mk$ LoadStores, not counting storing/accessing intermediate values.  For a MatVec, $k=1$.  Scalar operations may simply be counted.
 \subsubsection{ADT system}
 Based on the previous two sections, write out the expected performance of each component.  Make a count of the
 components and for each, include:
