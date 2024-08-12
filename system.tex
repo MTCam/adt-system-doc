@@ -461,7 +461,7 @@ The number of DOFs (or nodes, or modes) on the simplicial element is order-depen
 
 For example, a $p=1$ tetrahedral element will have 4 nodes, and a scalar field represented on a tetrahedral elements will require $d_v = \frac{4!}{3!} = 4$ nodal DOFs. The tet also has 4 trianglar faces, and each face has $d_f = \frac{3!}{2!} = 3$ DOFs, when we represent a scalar field on the face. Order $p=2$ tets have 10 volume nodes, and each triangular face has 6 nodes. 
 
-We denote the number of DOFs per element, and per face as $d_v$, and $d_f$, respectively. Likewise, in the following the number of elements will be denoted as $N_v$ and the total number of faces by $N_f$, while the number of faces per element is denoted by $n_f$.
+We denote the number of DOFs per element, and per face as $d_v$, and $d_f$, respectively. Likewise, in the following the number of elements will be denoted as $N_v$ and the total number of faces by $N_f$, while the number of faces per element is denoted by $n_f$.  The number of faces on any boundary $b_i$ is denoted $N_{b_i}$.
 
 \subsection{\ceesdcode{} DG Operators}
 
@@ -473,7 +473,7 @@ The element-local operators pre-calculated and provided my \ceesdcode{}, and the
 \item $\mathbb{S}_j$: Stiffness operator $d_v \times d_v$
 \end{itemize}
 
-\subsection{Algorithm}
+\subsection{Algorithm For ADT RHS}
 Write a pseudo-code explanation of every step, especially those steps that are expected to impact performance. 
 %A rough outline of the RHS algorithm for each element goes like this:
 %\begin{itemize}
@@ -502,50 +502,268 @@ Write a pseudo-code explanation of every step, especially those steps that are e
 %\item $\nabla \cdot \mathbf{F} = \mathbb{S}_{\hat{x}}\mathbf{F}_x + \mathbb{S}_{\hat{y}}\mathbf{%F}_y + \mathbb{S}_{\hat{z}}\mathbf{F_z}$
 %\item $\mathbb{M}^{-1}(h + \nabla\cdot\mathbf{F})$ for $\dot{Q}$
 %\end{itemize}
-
-\begin{algorithm}
-\caption{Compute RHS for Advection-Diffusion Equation using Discontinuous Galerkin Solver}
-\begin{algorithmic}[1]
-\State \textbf{Input:} $Q$, $\vec{v}$, $D$
-\State \textbf{Output:} $\dot{Q}$
-% \State Project $Q$ to element faces:
-\For{each interior boundary $b_i$}
-\State $\mathbb{P}(Q)$ ($\times \text{nfaces}_{b_i}$)
-\If{$b_i$ is partition}
-\State Exchange $Q$ across $b_i$, ($\text{nface}_{b_i} \times \text{ndof}_\text{face}$) values to communicate
-\EndIf
-\EndFor
-%\For{each face $f$}
-%  \State Compute $\mathbb{P}(Q)$ on $f$ \Comment{MatVec $\mathbb{P}(Q)$}
+%
+%\begin{algorithm}
+%\caption{Compute RHS for Advection-Diffusion Equation using Discontinuous Galerkin Solver}
+%\begin{algorithmic}[1]
+%\State \textbf{Input:} $Q$, $\vec{v}$, $D$
+%\State \textbf{Output:} $\dot{Q}$
+%% \State Project $Q$ to element faces:
+%
+%\For{$n=1$ to $N_v$}
+%\For{$m=1$ to $n_f$}
+%\State Project $Q$ to face: $\mathbb{P}(Q)$  ($d_v \times d_f$)
 %\EndFor
+%\EndFor
+%\For{each partition boundary $b_i$}
+%\State Exchange $Q$ across $b_i$, ($N_{b_i} \times d_f$) values to communicate
+%\EndFor
+%
+%\If{Advection enabled}
+%\For{$n=1$ to $N_v$}
+%\State Compute advection flux: $\mathbf{F} = \mathbf{F}_\text{adv} = Q\vec{v}$
+%\EndFor
+%\For{$n=1$ to $N_f$}
+%  \State Compute numerical flux: $h_f=\{\{\mathbf{F}_\text{adv}\}\} \cdot \hat{\mathbf{n}}$
+%  % \State Compute facial contribution $\mathbb{M}_f h$
+%  \State Accumulate to total numerical flux: $h = h + h_f$
+%\EndFor
+%\EndIf
+%
+%\If{Diffusion enabled}
+%
+%% === Compute Gradient ===
+%\For{$n=1$ to $N_v$}
+%\State Compute volume term for gradient: $\vec{dQ} = <\mathbb{S}_x Q, \mathbb{S}_y Q, \mathbb{S}_z Q>$
+%\EndFor
+%
+%\For{$n=1$ to $N_f$}
+%\State Compute gradient numerical flux $\mathbf{S}_f = \{\{Q\}\}\hat{\mathbf{n}}$
+%\State Accumulate to total gradient flux: $\mathbf{S} = \mathbf{S} + \mathbf{S}_f$
+%\EndFor
+%
+%\For{$n=1$ to $N_v$}
+%\State Compute $\nabla{Q} = \mathbb{M}^{-1}(\vec{dQ} + \mathbb{M}_f(\mathbf{S}))$ (one per dimension)
+%\EndFor
+%
+%% Exchange the gradient
+%\For{$n=1$ to $N_v$}
+%\For{$m=1$ to $n_f$}
+%\State Project $\nabla{Q}$ to face: $\mathbb{P}(\nabla{Q})$  ($d \times d_v \times d_f \times N_{b_i}$)
+%\EndFor
+%\EndFor
+%
+%\For{partition boundary $b_i$}
+%\State Exchange $\nabla{Q}$ across $b_i$, ($d(N_{b_i} \times d_f)$) values to communicate
+%\EndFor
+%
+%\For{$n=1$ to $N_v$}
+%\State Compute diffusion flux $\mathbf{F}_\text{diff} = -D\nabla{Q}$
+%\State Compute total flux $\mathbf{F} = \mathbf{F}_\text{adv} + \mathbf{F}_\text{diff}$
+%\EndFor
+%
+%% Compute diffusion numerical flux
+%\For{$n=1$ to $N_f$}
+%\State Compute numerical flux $H_f=\{\{\mathbf{F}_\text{diff}\}\} \cdot \hat{\mathbf{n}}$
+%% \State Compute facial contribution $\mathbb{M}_f h$
+%\State Accumulate to $H$
+%\EndFor
+%
+%\For{$n=1$ to $N_v$}  
+%\State Compute total numerical flux $h = h + H$
+%\EndFor
+%
+%\EndIf
+%
+%%\For{each face $f$}
+%%  \State Compute $\mathbb{P}(Q)$ on $f$ \Comment{MatVec $\mathbb{P}(Q)$}
+%%\EndFor
+%
+%
+%
+%\For{$n=1$ to $N_v$}  
+%\State Compute $\nabla \cdot \mathbf{F} = \mathbb{S}_{\hat{x}}\mathbf{F}_x + \mathbb{S}_{\hat{y}}\mathbf{F}_y + \mathbb{S}_{\hat{z}}\mathbf{F}_z$
+%\State Compute $\dot{Q} = \mathbb{M}^{-1}(\mathbb{M}_f(h) + \nabla \cdot \mathbf{F})$
+%\EndFor
+%
+%\end{algorithmic}
+%\end{algorithm}
 
-\For{$n = 1$ to $\frac{nfaces}{element}$}
-  \State Compute gradient numerical flux $\mathbf{H}_f = \{\{Q\}\}\hat{\mathbf{n}}$
-  \State Apply $\mathbb{M}_f$ on each component
-  \State Accumulate to $\mathbf{H}$
-\EndFor
-
-\State Compute $\vec{dQ} = \mathbb{S}_i Q$ (per dimension)
-\State Compute $\nabla{Q} = \mathbb{M}^{-1}(\vec{dQ} + \mathbf{H})$
-
-\State Project $\nabla{Q}$ to element faces (and communicate)
-\State Compute advective flux $\mathbf{F}_\text{adv} = Q\vec{v}$
-\State Compute diffusive flux $\mathbf{F}_\text{diff} = -D\nabla{Q}$
-\State $\mathbf{F} = \mathbf{F}_\text{adv} + \mathbf{F}_\text{diff}$
-
-\For{$n = 1$ to $\frac{nfaces}{element}$}
-  \State Compute advective flux $\mathbf{F}_\text{adv} = Q\vec{v}$
-  \State Compute diffusive flux $\mathbf{F}_\text{diff} = -D\nabla{Q}$
-  \State $\mathbf{F} = \mathbf{F}_\text{diff} - \mathbf{F}_\text{adv}$
-  \State Compute numerical flux $h_f=\{\{\mathbf{F}\}\} \cdot \hat{\mathbf{n}}$
-  \State Compute facial contribution $\mathbb{M}_f h$
-  \State Accumulate to $h$
-\EndFor
-
-\State Compute $\nabla \cdot \mathbf{F} = \mathbb{S}_{\hat{x}}\mathbf{F}_x + \mathbb{S}_{\hat{y}}\mathbf{F}_y + \mathbb{S}_{\hat{z}}\mathbf{F}_z$
-\State Compute $\dot{Q} = \mathbb{M}^{-1}(h + \nabla \cdot \mathbf{F})$
+% Pseudocode for ProjectQ
+\begin{algorithm}[H]
+\caption{Project $Q$ to Element Faces}
+\begin{algorithmic}[1]
+  \Function{ProjectQ}{$Q_v$}
+  \State \textbf{Input}: $Q_v$ \Comment{$Q$ on the volume discretization}
+  \State \textbf{Output}: $Q^{\pm}_f$  \Comment{$Q$ tracepair on all faces}
+  \For{$n=1$ to $N_v$}
+  \For{$m=1$ to $n_f$}
+  \State Project $Q_v$ to face: $Q^{\pm}_f = \mathbb{P}(Q_v)$  \Comment{$d_v \times d_f$}
+  \EndFor
+  \EndFor
+  \For{each partition boundary $b_i$}  \Comment{Exchange $Q^{\pm}$ across all partition boundaries}
+  \For{$n=1$ to $N_{b_i}$}
+  \State \textbf{Send} $Q^{-}$ \Comment{sends $d_f$ values}
+  \State \textbf{Recv} $Q^{+}$ \Comment{receives $d_f$ values}
+  % \State Exchange $Q^{\pm}$ across $b_i$ \Comment{Communicate $N_{b_i} \times d_f$ values}
+  \EndFor
+  \EndFor
+  \State \textbf{Return}: $Q^{\pm}_f$
+\EndFunction
 \end{algorithmic}
 \end{algorithm}
+
+% Pseudocode for ProjectGradQ
+\begin{algorithm}[H]
+\caption{Project $\vec{\nabla{Q}}$ to Element Faces}
+\begin{algorithmic}[1]
+  \Function{ProjectGradQ}{$\vec{\nabla{Q}}_v$}
+  \State \textbf{Input}: $\vec{\nabla{Q}}_v$ \Comment{$\vec{\nabla{Q}}$ on the volume discretization}
+  \State \textbf{Output}: $\vec{\nabla{Q}}^{\pm}_f$  \Comment{$\vec{\nabla{Q}}$ tracepair on all faces}
+  \For{$n=1$ to $N_v$}
+  \For{$m=1$ to $n_f$}
+  \For{$i=1$ to $d$}
+  \State $(\nabla{Q}^{\pm}_f)_i = \mathbb{P}((\nabla{Q}_v)_i)$ \Comment{projects $i$th component of $\vec{\nabla{Q}}_v$ to face}
+  \EndFor
+  \EndFor
+  \EndFor
+  \For{each partition boundary $b_i$}  \Comment{Exchange $\vec{\nabla{Q}}^{\pm}$ across all partition boundaries}
+  \For{$n=1$ to $N_{b_i}$}
+  \State \textbf{Send} $\vec{\nabla{Q}}^{-}$ \Comment{sends $d \times d_f$ values}
+  \State \textbf{Recv} $\vec{\nabla{Q}}^{+}$ \Comment{receives $d \times d_f$ values}
+  \EndFor
+  \EndFor
+  \State \textbf{Return}: $\vec{\nabla{Q}}^{\pm}_f$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+% Pseudocode for ComputeAdvectiveFlux
+\begin{algorithm}[H]
+\caption{Compute fluxes for advection}
+\begin{algorithmic}[1]
+  \Function{ComputeAdvectionFluxes}{$Q_v$, $Q^{\pm}_f$, $\vec{v}$}
+  \State \textbf{Input}: $Q_v$ \Comment{$Q$ on the volume discretization}
+  \State \textbf{Input}: $Q^{\pm}_f$ \Comment{$Q$ tracepair on all faces}
+  \State \textbf{Input}: $\vec{v}$ \Comment{$d$-vector advective velocity}
+  \State \textbf{Output}: $\vec{F}_\text{adv}$ \Comment{Advective flux on volume discretization}
+  \State \textbf{Output}: $h_f$ \Comment{Numerical flux for advection on all faces}
+  \For{$n=1$ to $N_v$}
+    \State Compute advection flux: $\mathbf{F}_\text{adv} = Q_v\vec{v}$
+  \EndFor
+  \For{$n=1$ to $N_f$}
+  \State Compute numerical flux: $h_f=\{\{Q^{\pm}_f\vec{v}\}\} \cdot \hat{\mathbf{n}}$
+  % \State Accumulate to total numerical flux: $h = h + h_f$
+  \EndFor
+  \State \textbf{Return}: $\vec{F}_\text{adv}$, $h_f$ 
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+% Pseudocode for gradient flux terms
+\begin{algorithm}[H]
+\caption{Compute flux terms for solution gradient}
+\begin{algorithmic}[1]
+  \Function{ComputeGradientFluxes}{$Q_v$, $Q^{\pm}_f$}
+  \State \textbf{Input}: $Q_v$ \Comment{$Q$ on the volume discretization}
+  \State \textbf{Input}: $Q^{\pm}_f$ \Comment{$Q$ tracepair on all faces}
+  \State \textbf{Output}: $\vec{\delta Q}_v$ \Comment{Volume term for gradient}
+  \State \textbf{Output}: $\vec{S_f}$ \Comment{Numerical flux for gradient on all faces}
+  \For{$n=1$ to $N_v$}
+  \State Compute gradient volume term: $\vec{\delta Q}_v = <\mathbb{S}_x Q_v, \mathbb{S}_y Q_v, \mathbb{S}_z Q_v>$
+  \EndFor
+  \For{$n=1$ to $N_f$}
+  \State Compute gradient numerical flux: $\vec{S}_f = \{\{Q^{\pm}_f\}\}\hat{\mathbf{n}}$
+  \EndFor
+  \State \textbf{Return}: $\vec{\delta Q}_v$, $\vec{S}_f$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+% Pseudocode for ComputeGradient
+\begin{algorithm}[H]
+\caption{Compute solution gradient}
+\begin{algorithmic}[1]
+  \Function{ComputeGradient}{$Q_v$, $Q^{\pm}_f$}
+  \State \textbf{Input}: $Q_v$ \Comment{$Q$ on the volume discretization}
+  \State \textbf{Input}: $Q^{\pm}_f$ \Comment{$Q$ tracepair for all faces}
+  \State \textbf{Output}: $\vec{\nabla{Q}}_v$ \Comment{$\vec{\nabla{Q}}$ on the volume discretization}
+  \State \textbf{Output}: $\vec{\nabla{Q}}^{\pm}_f$ \Comment{$\vec{\nabla{Q}}$ tracepair on all faces}
+  \State $\vec{\delta{Q}}_v,\vec{S}_f=$ \textsc{ComputeGradientFluxes}($Q_v$, $Q^{\pm}_f$)
+  \For{$n=1$ to $N_v$}
+  \For{$i=1$ to $d$}
+  \State $(\nabla{Q}_v)_i = \mathbb{M}^{-1}\left((\vec{\delta Q}_v)_i + \mathbb{M}_f((\vec{S}_f)_i)\right)$ \Comment{computes $i$th component of $\vec{\nabla{Q}}_v$}
+  \EndFor
+  \EndFor
+  \State $\vec{\nabla{Q}}^{\pm}_f=$ \textsc{ProjectGradQ}($\vec{\nabla{Q}}_v$)
+  \State \textbf{Return}: $\vec{\nabla{Q}}_v$, $\vec{\nabla{Q}}^{\pm}_f$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+% Pseudocode for ComputeDiffusiveFlux
+\begin{algorithm}[H]
+\caption{Compute fluxes for diffusion}
+\begin{algorithmic}[1]
+  \Function{ComputeDiffusionFluxes}{$\vec{\nabla{Q}}_v$, $\vec{\nabla{Q}}^{\pm}_f$, $D$}
+  \State \textbf{Input}: $\vec{\nabla{Q}}_v$  \Comment{$\vec{\nabla{Q}}$ on the volume discretization}
+  \State \textbf{Input}: $\vec{\nabla{Q}}^{\pm}_f$  \Comment{$\vec{\nabla{Q}}$ tracepair on all faces}
+  \State \textbf{Output}: $\vec{F}_\text{diff}$ \Comment{Diffusion flux on the volume discretization}
+  \State \textbf{Output}: $H_f$  \Comment{Numerical flux for diffusion on all faces}
+  \For{$n=1$ to $N_v$}
+  \State $\mathbf{F}_\text{diff} = -D\vec{\nabla{Q}}_v$
+  \EndFor
+  \For{$n=1$ to $N_f$}
+  \State Compute numerical flux $H_f=\{\{-D\vec{\nabla{Q}}^{\pm}_f\}\} \cdot \hat{\mathbf{n}}$
+  \EndFor
+  \State \textbf{Return}: $\vec{F}_\text{diff}$, $H_f$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+% Pseudocode for ComputeFinalInverseMass
+\begin{algorithm}[H]
+\caption{Apply Inverse Mass Operator for $\dot{Q}$}
+\begin{algorithmic}[1]
+  \Function{ApplyInverseMassDiv}{$\mathbf{F}_v$, $h_f$}
+  \State \textbf{Input}: $\vec{F}_v$  \Comment{Total physical flux on volume discretization}
+  \State \textbf{Input}: $h$  \Comment{Total numerical flux on all faces}
+  \State \textbf{Output}: $\dot{Q}_v$ \Comment{Time rate of change for $Q$ on volume discretization}
+\For{$n=1$ to $N_v$}
+\State $\nabla \cdot \mathbf{F} = \mathbb{S}_{\hat{x}}\mathbf{F}_x + \mathbb{S}_{\hat{y}}\mathbf{F}_y + \mathbb{S}_{\hat{z}}\mathbf{F}_z$
+\State $\dot{Q}_v = \mathbb{M}^{-1}(\mathbb{M}_f(h) + \nabla \cdot \mathbf{F})$
+\EndFor
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+% Pseudocode for ADT RHS
+\begin{algorithm}[H]
+\caption{Compute RHS ($\dot{Q}$) for ADT System}
+\begin{algorithmic}[1]
+  \Function{AdvectionDiffusionRHS}{$Q_v$, $\vec{v}$, $D$}
+  \State \textbf{Input}: $Q_v$  \Comment{Solution $Q$ on the volume discretization}
+  \State \textbf{Input}: $\vec{v}$  \Comment{$d$-vector velocity (parameter)}
+  \State \textbf{Input}: $D$ \Comment{Diffusivity (parameter)}\
+  \State \textbf{Output}: $\dot{Q}_v$ \Comment{Time rate of change for $Q$ on volume discretization}
+  \State $\vec{F}_v = (\vec{0})_v$ \Comment{Initialize to zeros}
+  \State $h_f = (0)_f$  \Comment{Initialize to zeros}
+  \If{Advection Enabled or Diffusion Enabled}
+  \State $Q^{\pm}_f=$ \textsc{ProjectQ}($Q_v$)
+  \EndIf
+  \If{Advection Enabled}
+  \State $\vec{F}_v$, $h_f$ = \textsc{ComputeAdvectionFluxes}($Q_v$, $Q^{\pm}_f$, $\vec{v}$)
+  \EndIf
+  \If{Diffusion Enabled}
+  \State $\vec{\nabla{Q}}_v$, $\vec{\nabla{Q}}^{\pm}_f$ = \textsc{ComputeGradQ}($Q_v$, $Q^{\pm}_f$)
+  \State $\vec{F}_v$, $h_f$ = $\vec{F}_v$, $h_f$ + \textsc{ComputeDiffusionFluxes}($\vec{\nabla{Q}}_f$, $\vec{\nabla{Q}}^{\pm}_f$, $D$)
+  \EndIf
+  \State $\dot{Q}_v$ = \textsc{ApplyInverseMassDiv}($\vec{F}_v$, $h_f$)
+  \State \textbf{Return}: $\dot{Q}_v$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
 
 \subsection{Expected performance}
 \subsubsection{General operators}
