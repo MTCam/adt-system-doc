@@ -461,7 +461,9 @@ The number of DOFs (or nodes, or modes) on the simplicial element is order-depen
 
 For example, a $p=1$ tetrahedral element will have 4 nodes, and a scalar field represented on a tetrahedral elements will require $d_v = \frac{4!}{3!} = 4$ nodal DOFs. The tet also has 4 trianglar faces, and each face has $d_f = \frac{3!}{2!} = 3$ DOFs, when we represent a scalar field on the face. Order $p=2$ tets have 10 volume nodes, and each triangular face has 6 nodes. 
 
-We denote the number of DOFs per element, and per face as $d_v$, and $d_f$, respectively. Likewise, in the following the number of elements will be denoted as $N_v$ and the total number of faces by $N_f$, while the number of faces per element is denoted by $n_f$.  The number of faces on any boundary $b_i$ is denoted $N_{b_i}$.
+Tensor product elements will have $2^d$ vertices, and $2d$ faces per element.
+
+We denote the number of DOFs per element, and per face as $d_v$, and $d_f$, respectively. Likewise, in the following the number of elements will be denoted as $N_v$ and the total number of faces by $N_f$, while the number of faces per element is denoted by $n_f$.  The number of faces on any boundary $b_i$ is denoted $N_{b_i}$.  Note that $N_f = N_v n_f$.
 
 \subsection{\ceesdcode{} DG Operators}
 
@@ -766,16 +768,63 @@ Write a pseudo-code explanation of every step, especially those steps that are e
 
 
 \subsection{Expected performance}
-\subsubsection{General operators}
-What FLOPs, memory requirements do we expect for the operations appearing in the DG code?
-
-A matrix-matrix (MatMat) multiplication of matrices with sizes described by:  $(m \times n) \times (n \times k)$ should, at least naively, involve $m~k~(2n - 1)$ FLOPS, with $mn+nk+mk$ LoadStores, not counting storing/accessing intermediate values.  For a MatVec, $k=1$.  Scalar operations may simply be counted.
-\subsubsection{ADT system}
 Based on the previous two sections, write out the expected performance of each component.  Make a count of the
 components and for each, include:
 \begin{itemize}
 \item Number of FLOPs
 \item Memory Load-and-Stores
+\end{itemize}
+
+\subsubsection{General operators}
+What FLOPs, memory requirements do we expect for the operations appearing in the DG code?
+
+A matrix-matrix (MatMat) multiplication of matrices with sizes described by:  $(m \times n) \times (n \times k)$ should, at least naively, involve $m~k~(2n - 1)$ FLOPS, with $mn+nk+mk$ LoadStores, not counting storing/accessing intermediate values.  For a MatVec, $k=1$.  Scalar operations may simply be counted.
+\subsubsection{Algorithm 1: Solution Projection}
+Each projection of $Q_v$ to $Q_f$ for each face should take $d_v(2d_f - 1)$ FLOPs with $d_v d_f + d_f + d_v$ LoadStores.  There is one projection for every face in the mesh (i.e. every face of every element) which gives $N_v n_f$ projections. Neglecting communication, Algorithm 1 should peform as:
+\begin{itemize}
+\item FLOPS: $N_v n_f d_v(2d_f - 1)$
+\item LoadStores: $N_v n_f (d_v d_f + d_f + d_v)$
+\end{itemize}
+\subsubsection{Algorithm 2: Gradient Projection}
+Each projection of each component of $\vec{\nabla{Q}}_v$ to the component of $\vec{\nabla{Q}}_f$ for each face should take $d_v (2d_f - 1)$ FLOPs with $(d_v d_f + d_f + d_v)$ LoadStores.  There is one projection for every face in the mesh (i.e. every face of every element) for each component which gives $d N_v n_f$ projections. Neglecting communication, Algorithm 2 should peform as:
+\begin{itemize}
+\item FLOPS: $d N_v n_f d_v(2d_f - 1)$
+\item LoadStores: $d N_v n_f (d_v d_f + d_f + d_v)$
+\end{itemize}
+\subsubsection{Algorithm 3: Advection Flux Computation}
+Computing the physical flux for each element gives $d N_v d_v$ total FLOPs. The solution must be loaded and the vector components of the flux stored, which gives $(N_v + d N_v)d_v$ LoadStores. Nice, this gives the advective flux computation a fixed computational intensity (CI) of $\frac{d}{d+1}$.  The physical flux computation should perform as:
+
+\begin{itemize}
+\item FLOPs: $d N_v d_v$
+\item LoadStores: $N_v(d+1)d_v$ 
+\end{itemize}
+
+Computing the numerical flux for each face in the mesh requires loading $Q^-_f$, $Q^+_f$, and the $d$ components of $\hat{n}$, and storing the result. 2 FLOPs compute the solution average and $(2d - 1)$ FLOPs for the dot product. This part of the algorithm has a fixed CI of $\frac{(2d+1)}{d+3)}$. This is done for each face in the mesh, so computing the advection numerical flux should perform as:
+\begin{itemize}
+\item FLOPS: $N_v n_f (2d + 1) d_f$
+\item LoadStores: $N_v n_f (d + 3) d_f$
+\end{itemize}
+
+\subsubsection{Algorithm 7: Apply Inverse Mass Operator}
+First, the divergence of the flux is computed which requires loading $d d_v^2$ for the $\mathbb{S}$ operators and $d d_v$ components of the flux, and then storing the $d_v$ result.  The FLOPs are $d$ times scalar volume operators ($d_v(2d_v - 1)$) FLOPs and $(d-1)d_v$ FLOPs for the dot product.  The divergence operation should perform:
+
+\begin{itemize}
+\item FLOPs: $N_v d_v (2 d d_v + 1)$
+\item LoadStores: $N_v d_v (d (d_v + 1) + 1))$
+\end{itemize}
+
+The application of the face mass operator to the numerical flux requires loading $d_v d_f$ for the operator and $d_f$ values of the numerical flux for each face, and storing the $d_v$ results for each element. $d_v (2d_f-1)$ FLOPs per face, and $n_f-1$ FLOPs are required to accumulate the result into the volume data structure for each element.
+
+\begin{itemize}
+\item FLOPs: $N_v (n_f d_v 2d_f - 1)$
+\item LoadStores: $N_v (n_f d_f(d_v + 1) + d_v)$
+\end{itemize}
+
+The formation of the operand for the inverse face mass operator requires $d_v$ FLOPs per element. The operator FLOPs are $d_v(2d_v - 1)$.  The LoadStores are $d_v(d_v + 2)$.
+
+\begin{itemize}
+\item FLOPs: $N_v 2 d_v^2$
+\item LoadStores: $N_v d_v(d_v + 2)$
 \end{itemize}
 
 \section{Numerical Results}
