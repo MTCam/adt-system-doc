@@ -2,7 +2,7 @@
 import numpy as np
 
 # Simulation input parameters:
-N_v = 100  # Number of elements
+N_v = 1000000  # Number of elements
 p = 1  # polynomial order
 type_of_elements = "simplex"
 d = 3 # spatial dimension
