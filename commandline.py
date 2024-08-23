@@ -2,10 +2,11 @@ import argparse
 import requests
 import json
 
-OLLAMA_URL = 'https://secret-ollama.ncsa.ai'
-OLLAMA_API_URL = f'{OLLAMA_URL}/api'
-OLLAMA_CHAT_URL = f'{OLLAMA_API_URL}/chat'
-#OLLAMA_CHAT_URL = 'https://uiuc.chat/api/chat-api/chat'
+headers = {
+    'Content-Type': 'application/json'
+}
+
+OLLAMA_CHAT_URL = "https://www.uiuc.chat/api/chat-api/chat"
 OLLAMA_MODEL = 'llama3.1:70b'
 
 def start_conversation(character):
@@ -15,11 +16,15 @@ def query(conversation, prompt):
     conversation.append({'role': 'user', 'content': prompt})
     print(f"{conversation=}, posting request")
     response = requests.post(
-        OLLAMA_CHAT_URL,
+        OLLAMA_CHAT_URL, headers=headers,
         json={
             'model': OLLAMA_MODEL,
             'messages': conversation,
-            'stream': True
+            "openai_key": None,
+            "temperature": 0.1,
+            "course_name": "finalattempyollamatest",
+            'stream': True,
+            "api_key": "uc_9e0b397538754ed882ec14fa8fa57a87"
         },
         stream=True
     )
@@ -29,14 +34,18 @@ def query(conversation, prompt):
     for line in response.iter_lines():
         if line:
             decoded_line = line.decode('utf-8')
-            # Parse the JSON response
-            try:
-                message = json.loads(decoded_line)
-                if 'message' in message and 'content' in message['message']:
-                    # Append the content to the reply
-                    reply += message['message']['content']
-            except json.JSONDecodeError:
-                print('Could not decode:', decoded_line)
+            # Check if the line starts with a brace to ensure it's likely JSON
+            if decoded_line.startswith("{"):
+                try:
+                    message = json.loads(decoded_line)
+                    if 'message' in message and 'content' in message['message']:
+                        # Append the content to the reply
+                        reply += message['message']['content']
+                except json.JSONDecodeError:
+                    print('Could not decode JSON:', decoded_line)
+            else:
+                # Handle non-JSON lines if needed
+                print(f"response line: {decoded_line}")
     
     conversation.append({'role': 'assistant', 'content': reply})
     return reply
@@ -72,3 +81,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
