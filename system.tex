@@ -475,6 +475,9 @@ The element-local operators pre-calculated and provided my \ceesdcode{}, and the
 \item $\mathbb{S}_j$: Stiffness operator $d_v \times d_v$
 \end{itemize}
 
+\subsection{Periodic Boundaries}
+The current implementation assumes periodic boundaries in all dimensions, eliminating the need for domain-boundary-specific numerical flux handling. This simplifies computation and aligns with future extensions to more complex models.
+
 \subsection{Algorithm For ADT RHS}
 Write a pseudo-code explanation of every step, especially those steps that are expected to impact performance. 
 %A rough outline of the RHS algorithm for each element goes like this:
@@ -826,6 +829,55 @@ The formation of the operand for the inverse face mass operator requires $d_v$ F
 \item FLOPs: $N_v 2 d_v^2$
 \item LoadStores: $N_v d_v(d_v + 2)$
 \end{itemize}
+
+\subsection{Additional considerations}
+\begin{itemize}
+\item Kernel content and number of kernels in \ceesdcode{} is not the same as those ``on paper''
+\item With GPU calculations, there will be additional costs and overheads of data transfer, and queueing (floor)
+\item \ceesdcode{} applies grid metrics on-the-fly as near as I can tell, will change the observed performance
+\end{itemize}
+
+
+\section{Parallel Model Considerations}
+\label{sec:parallel-model}
+
+Additional considerations for extending the performance model for distributed computation.
+
+\subsection{Partition Boundaries and MPI Communication}
+Each MPI rank processes a \textit{partition} of the domain, with communication required to exchange the solution and its gradient across partition boundaries. Key considerations include:
+\begin{itemize}
+    \item \textbf{Communication Volume:} For scalar \( Q \), one message per face is sent for \( Q \), and \( d \) messages are sent for \( \nabla Q \). For CNS extensions, \( N_{\text{equations}} \) components multiply this communication volume. (i.e. there is one message per \ceesdcode{} DOFArray)
+    \item \textbf{Data Transfer:} Communication occurs on the host. Data must be transferred between the GPU and host before and after MPI exchange, introducing latency and bandwidth costs.
+    \item \textbf{Partition Load Balancing:} Domain partitioning with Metis ensures approximate load balance, though face counts and neighbor counts (\( N_p \)) can vary across ranks.
+\end{itemize}
+
+\subsection{Communication Overheads}
+The MPI communication overhead can be modeled as:
+\[
+T_{\text{comm}} = N_p \cdot N_f \cdot d_f \cdot \left( T_{\text{send}} + T_{\text{recv}} \right) + 2T_{\text{transfer}},
+\]
+where:
+\begin{itemize}
+    \item \( N_p \): Number of neighbors per rank,
+    \item \( N_f \): Number of partition-boundary faces,
+    \item \( T_{\text{send}}, T_{\text{recv}} \): Costs for sending and receiving messages,
+    \item \( T_{\text{transfer}} \): Cost of transferring data between GPU and host.
+\end{itemize}
+
+\subsection{Rank-Level Variations and Bottlenecks}
+The number of neighbors (\( N_p \)) and partition-boundary faces varies significantly across ranks:
+\begin{itemize}
+    \item \textbf{Neighbor Count Variability:} Even in simple 1D partitioning, end ranks may have only one neighbor, while others have two. In higher-dimensional partitioning with Metis, \( N_p \) can vary widely, reflecting the unstructured nature of the mesh.
+    \item \textbf{Partition-Boundary Face Counts:} The number of faces on a partition boundary differs across ranks but is symmetric for the two ranks sharing the boundary.
+\end{itemize}
+
+To model parallel performance, a rank-by-rank analysis is essential, as overall application performance will depend on the slowest rank.
+
+\subsection{Communication and Computation Overlap}
+Currently, no overlap exists between computation and communication within a given rank. This introduces potential inefficiencies, as ranks must wait for communication to complete before resuming computation. Future work will explore strategies to mitigate this bottleneck.
+
+\subsection{Future Work}
+Stubs for incorporating communication costs into the performance model are prepared. The next steps include measuring transfer and MPI latency costs on target platforms.
 
 \section{Numerical Results}
 \subsection{ADT}
